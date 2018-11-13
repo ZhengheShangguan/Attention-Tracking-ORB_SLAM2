@@ -3,7 +3,7 @@
 
 **Authors: [Attention and Anticipation in Fast Visual-Inertial Navigation]** [Luca Carlone and Sertac Karaman](https://arxiv.org/pdf/1610.03344.pdf)
 
-**Authors: Attention-Tracking Visual Odometry_Adapted_from_ORB-SLAM2** Zhenghe Shangguan
+**Authors: Attention-Tracking ORB-SLAM2** Zhenghe Shangguan
 
 
 # 1. Main Contribution
