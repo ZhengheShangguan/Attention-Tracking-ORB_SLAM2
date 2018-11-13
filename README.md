@@ -37,11 +37,11 @@ ROS indigo is required [ros](http://wiki.ros.org/indigo/Installation/Ubuntu).
 
 Clone the repository:
 ```
-git clone https://github.com/ZhengheShangguan/Attention-Tracking-VO_adapted_from_ORB_SLAM2.git
+git clone hhttps://github.com/ZhengheShangguan/Attention-Tracking-Visual_Odometry.git
 ```
 
 ```
-cd Attention-Tracking-VO_adapted_from_ORB_SLAM2
+cd Attention-Tracking-Visual_Odometry
 chmod +x build.sh
 ./build.sh
 ```
