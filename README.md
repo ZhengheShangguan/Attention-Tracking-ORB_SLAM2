@@ -40,8 +40,8 @@ Clone the repository:
 git clone https://github.com/ZhengheShangguan/Attention-Tracking-ORB_SLAM2.git
 ```
 
-```
 First of all: If you set your default ROS PATH as /../../../ORB_SLAM2, you should change file name to be ORB_SLAM2  before you build.
+
 ```
 cd ORB_SLAM2
 chmod +x build.sh
@@ -52,10 +52,9 @@ This will create **libORB_SLAM2.so**  at *lib* folder and the executables **mono
 
 # 4. Building ROS
 
-```
 First of all: If you set your default ROS PATH as /../../../ORB_SLAM2, you should change file name to be ORB_SLAM2  before you build.
-```
 
+```
 chmod +x build_ros.sh
 ./build_ros.sh
 ```
