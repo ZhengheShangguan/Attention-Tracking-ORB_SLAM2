@@ -141,7 +141,7 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
 
             p_l = mCurrentFrame->mvpMapPoints[i]->GetWorldPos().clone();
 
-            plt = p_l - mCurrentFrame->mtcw;
+            plt = mCurrentFrame->mRcw * p_l;
             pt_skew.at<float>(0,0) = 0.0f;
             pt_skew.at<float>(0,1) = -plt.at<float>(2,0);
             pt_skew.at<float>(0,2) = plt.at<float>(1,0);
@@ -153,8 +153,8 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
             pt_skew.at<float>(2,2) = 0.0f;
             
             // calculate two contribution matrices
-            A_part1 = -U_kl * mCurrentFrame->mRcw.t() * pt_skew;
-            A_part2 = U_kl * mCurrentFrame->mRcw.t();
+            A_part1 = -U_kl * pt_skew;
+            A_part2 = U_kl;
             delta_tmp = A_tmp.t() * A_tmp;
             delta_tmp.convertTo(delta_tmp, CV_32F);
             delta_local[count_match] = delta_tmp.clone();
