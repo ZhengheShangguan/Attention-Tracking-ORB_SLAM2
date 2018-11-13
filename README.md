@@ -43,7 +43,7 @@ Some calculations:
 - ![seventh_equation](https://latex.codecogs.com/gif.latex?%5Cfrac%7B%5Cpartial%20f%7D%7B%5Cpartial%20%5Cvarphi%7D%7C_%7B%28%5Chat%7B%5Cvarphi%7D%2C%5Chat%7Bt%7D%29%7D%20%3D%20%5Cfrac%7B%5Cpartial%20f%7D%7B%5Cpartial%20%5Cvarphi%7D%7C_%7B%280%2C%5Chat%7Bt%7D%29%7D%3D%7BU%7D_%7Bkl%7D%28%5Chat%7BR%7D%7Bp%7D%29%5E%7B%7B%5Cland%7D%7D)
 
 Thus, the contribution of l^th feature during H-time horizon can be calculated as:
-![eighth_equation](https://latex.codecogs.com/gif.latex?A%20%3D%20%5Cleft%5B%5Cbegin%7Barray%7D%7Bccc%7D%20-u_%7Bkl%7D%5Ctimes%20K%20%5Chat%7BR%7D_%7Bcam%2Ck%7D%5E%7BT%7D%28%28p_%7Bl%7D%20-%20%5Chat%7Bt%7D_%7Bcam%2Ck%7D%5E%7Bw%7D%29%5E%7B%5Cland%7D%29%2C%20u_%7Bkl%7D%5Ctimes%20K%5Chat%7BR%7D_%7Bcam%2Ck%7D%5E%7BTTT%7D%20%5C%5C%20...%5C%5C%20-u_%7B%28k&plus;H%29l%7D%5Ctimes%20K%20%5Chat%7BR%7D_%7Bcam%2Ck%7D%5E%7BT%7D%28%28p_%7Bl%7D%20-%20%5Chat%7Bt%7D_%7Bcam%2Ck&plus;H%7D%5E%7Bw%7D%29%5E%7B%5Cland%7D%29%2C%20u_%7B%28k&plus;H%29l%7D%5Ctimes%20K%5Chat%7BR%7D_%7Bcam%2Ck&plus;H%7D%5E%7BT%7D%20%5Cend%7Barray%7D%20%5Cright%5D)
+![eighth_equation](https://latex.codecogs.com/gif.latex?A%20%3D%20%5Cleft%5B%5Cbegin%7Barray%7D%7Bccc%7D%20U_%7Bkl%7D%20%28%5Chat%7B%7BR%7D_%7Bk%7D%7D%20p_%7Bl%7D%29%5E%7B%5Cland%7D%2C%20-U_%7Bkl%7D%20%5C%5C%20...%5C%5C%20U_%7B%28k&plus;H%29l%7D%20%28%7B%5Chat%7BR%7D%7D_%7Bk&plus;H%7D%20p_%7Bl%7D%29%5E%7B%5Cland%7D%2C%20-U_%7B%28k&plus;H%29l%7D%20%5Cend%7Barray%7D%20%5Cright%5D)
 
 ![ninth_equation](https://latex.codecogs.com/gif.latex?%5Ctriangle_%7Bl%7D%20%3D%20A%5E%7BT%7DA)
 
