@@ -1,9 +1,9 @@
-# Attention-Tracking_ORB-SLAM2
+# Attention-Tracking-ORB_SLAM2
 **Authors: ORB SLAM 2** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 
 **Authors: [Attention and Anticipation in Fast Visual-Inertial Navigation]** [Luca Carlone and Sertac Karaman](https://arxiv.org/pdf/1610.03344.pdf)
 
-**Authors: Attention-Tracking ORB-SLAM2** Zhenghe Shangguan
+**Authors: Attention-Tracking ORB_SLAM2** Zhenghe Shangguan
 
 
 # 1. Main Contribution
@@ -37,7 +37,7 @@ ROS indigo is required [ros](http://wiki.ros.org/indigo/Installation/Ubuntu).
 
 Clone the repository:
 ```
-git clone https://github.com/ZhengheShangguan/Attention-Tracking_ORB-SLAM2.git
+git clone https://github.com/ZhengheShangguan/Attention-Tracking-ORB_SLAM2.git
 ```
 
 ```
