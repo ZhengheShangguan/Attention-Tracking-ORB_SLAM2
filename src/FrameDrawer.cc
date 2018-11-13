@@ -90,10 +90,51 @@ cv::Mat FrameDrawer::DrawFrame()
     {
         mnTracked=0;
         mnTrackedVO=0;
+
         const float r = 5;
         const int n = vCurrentKeys.size();
+        // Zhenghe part: variable
+        int jj = 0;
         for(int i=0;i<n;i++)
         {
+            //Zhenghe part
+            if((!mvAttKeys_ind.empty()) && (i == mvAttKeys_ind[jj]))
+            {
+                cv::Point2f att_pt1,att_pt2;
+                int index = mvAttKeys_ind[jj];
+                att_pt1.x=vCurrentKeys[index].pt.x-r;
+                att_pt1.y=vCurrentKeys[index].pt.y-r;
+                att_pt2.x=vCurrentKeys[index].pt.x+r;
+                att_pt2.y=vCurrentKeys[index].pt.y+r;
+                cv::rectangle(im,att_pt1,att_pt2,cv::Scalar(0,0,255));
+                cv::circle(im,vCurrentKeys[index].pt,2,cv::Scalar(0,0,255),-1);
+
+                // // for debugging: write this vector into a .txt file
+                // std::ofstream att_data;
+                // att_data.open("att_data.txt", std::fstream::app);
+
+                // att_data << std::fixed << jj << "   ";
+                // att_data << std::fixed << index << "   ";
+                // att_data << std::fixed << vCurrentKeys[index].pt.x << "   ";
+                // att_data << std::fixed << vCurrentKeys[index].pt.y << std::endl;
+
+                // att_data.close();
+                // //std::cout << "att_data.txt is saved!" << std::endl;
+
+                jj++;
+
+                if(vbMap[i])
+                {
+                    mnTracked++;
+                }
+                else if(vbVO[i])
+                {
+                    mnTrackedVO++;
+                }
+                continue;
+            }
+
+            
             if(vbVO[i] || vbMap[i])
             {
                 cv::Point2f pt1,pt2;
@@ -141,7 +182,7 @@ void FrameDrawer::DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText)
             s << "LOCALIZATION | ";
         int nKFs = mpMap->KeyFramesInMap();
         int nMPs = mpMap->MapPointsInMap();
-        s << "KFs: " << nKFs << ", MPs: " << nMPs << ", Matches: " << mnTracked;
+        s << "KFs: " << nKFs << ", MPs: " << nMPs << ", Matches: " << mnTracked << ", Attention Features: " << Att_size;
         if(mnTrackedVO>0)
             s << ", + VO matches: " << mnTrackedVO;
     }
@@ -174,6 +215,9 @@ void FrameDrawer::Update(Tracking *pTracker)
     mvbMap = vector<bool>(N,false);
     mbOnlyTracking = pTracker->mbOnlyTracking;
 
+    // Zhenghe part
+    mvAttKeys_ind = pTracker->mCurrentFrame.select_ind;
+    Att_size = static_cast<int>(mvAttKeys_ind.size());
 
     if(pTracker->mLastProcessedState==Tracking::NOT_INITIALIZED)
     {

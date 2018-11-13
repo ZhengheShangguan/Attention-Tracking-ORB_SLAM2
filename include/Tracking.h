@@ -37,8 +37,10 @@
 #include "Initializer.h"
 #include "MapDrawer.h"
 #include "System.h"
+#include "Attention.h"
 
 #include <mutex>
+
 
 namespace ORB_SLAM2
 {
@@ -73,6 +75,7 @@ public:
 
     // Use this function if you have deactivated local mapping and you only want to localize the camera.
     void InformOnlyTracking(const bool &flag);
+
 
 
 public:
@@ -114,6 +117,13 @@ public:
     bool mbOnlyTracking;
 
     void Reset();
+
+
+
+    // Zhenghe part: Attention model
+    Attention attention;
+    int attention_orig;
+
 
 protected:
 

@@ -48,6 +48,11 @@ public:
     // Draw last processed frame.
     cv::Mat DrawFrame();
 
+
+    // Zhenghe part
+    int Att_size;
+    std::vector<int> mvAttKeys_ind;
+
 protected:
 
     void DrawTextInfo(cv::Mat &im, int nState, cv::Mat &imText);

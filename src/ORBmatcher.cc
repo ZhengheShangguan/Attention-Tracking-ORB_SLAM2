@@ -1325,7 +1325,7 @@ int ORBmatcher::SearchBySim3(KeyFrame *pKF1, KeyFrame *pKF2, vector<MapPoint*> &
     return nFound;
 }
 
-int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, const float th, const bool bMono)
+int ORBmatcher::SearchByProjection(Frame &CurrentFrame, Frame &LastFrame, const float th, const bool bMono)
 {
     int nmatches = 0;
 
@@ -1350,7 +1350,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
 
     for(int i=0; i<LastFrame.N; i++)
     {
-        MapPoint* pMP = LastFrame.mvpMapPoints[i];
+        MapPoint* pMP = LastFrame.mvpMapPoints[i]; // Zhenghe: i is the index of MP from lastframe
 
         if(pMP)
         {
@@ -1367,7 +1367,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 if(invzc<0)
                     continue;
 
-                float u = CurrentFrame.fx*xc*invzc+CurrentFrame.cx;
+                float u = CurrentFrame.fx*xc*invzc+CurrentFrame.cx; // Zhenghe: u, v are the theoretical projections of MP i
                 float v = CurrentFrame.fy*yc*invzc+CurrentFrame.cy;
 
                 if(u<CurrentFrame.mnMinX || u>CurrentFrame.mnMaxX)
@@ -1380,7 +1380,7 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 // Search in a window. Size depends on scale
                 float radius = th*CurrentFrame.mvScaleFactors[nLastOctave];
 
-                vector<size_t> vIndices2;
+                vector<size_t> vIndices2; // Zhenghe: vIndices2 is a vector from feature region around the projection of MP i in currentframe
 
                 if(bForward)
                     vIndices2 = CurrentFrame.GetFeaturesInArea(u,v, radius, nLastOctave);
@@ -1426,6 +1426,10 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 if(bestDist<=TH_HIGH)
                 {
                     CurrentFrame.mvpMapPoints[bestIdx2]=pMP;
+
+                    // Zhenghe Part
+                    LastFrame.MatchNextFrame[i] = bestIdx2;
+
                     nmatches++;
 
                     if(mbCheckOrientation)
@@ -1450,6 +1454,9 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
         int ind1=-1;
         int ind2=-1;
         int ind3=-1;
+        
+        // Zhenghe Part
+        std::vector<int>::iterator it_badmatch;
 
         ComputeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
 
@@ -1460,6 +1467,12 @@ int ORBmatcher::SearchByProjection(Frame &CurrentFrame, const Frame &LastFrame, 
                 for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
                 {
                     CurrentFrame.mvpMapPoints[rotHist[i][j]]=static_cast<MapPoint*>(NULL);
+
+                    // Zhenghe Part
+                    it_badmatch = std::find(LastFrame.MatchNextFrame.begin(), LastFrame.MatchNextFrame.end(), rotHist[i][j]);
+                    if (it_badmatch < LastFrame.MatchNextFrame.end())
+                        *it_badmatch = -1;
+
                     nmatches--;
                 }
             }

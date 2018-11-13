@@ -32,10 +32,12 @@
 
 #include"Optimizer.h"
 #include"PnPsolver.h"
+#include"Attention.h"
 
 #include<iostream>
 
 #include<mutex>
+
 
 
 using namespace std;
@@ -110,7 +112,7 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
 
     // Load ORB parameters
 
-    int nFeatures = fSettings["ORBextractor.nFeatures"];
+    int nFeatures = fSettings["ORBextractor.nFeatures"]; // default is 1000, I tried 600.
     float fScaleFactor = fSettings["ORBextractor.scaleFactor"];
     int nLevels = fSettings["ORBextractor.nLevels"];
     int fIniThFAST = fSettings["ORBextractor.iniThFAST"];
@@ -145,7 +147,6 @@ Tracking::Tracking(System *pSys, ORBVocabulary* pVoc, FrameDrawer *pFrameDrawer,
         else
             mDepthMapFactor = 1.0f/mDepthMapFactor;
     }
-
 }
 
 void Tracking::SetLocalMapper(LocalMapping *pLocalMapper)
@@ -198,6 +199,9 @@ cv::Mat Tracking::GrabImageStereo(const cv::Mat &imRectLeft, const cv::Mat &imRe
 
     mCurrentFrame = Frame(mImGray,imGrayRight,timestamp,mpORBextractorLeft,mpORBextractorRight,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
+    // Zhenghe part
+    attention = Attention();
+
     Track();
 
     return mCurrentFrame.mTcw.clone();
@@ -229,6 +233,9 @@ cv::Mat Tracking::GrabImageRGBD(const cv::Mat &imRGB,const cv::Mat &imD, const d
 
     mCurrentFrame = Frame(mImGray,imDepth,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
+    // Zhenghe part
+    attention = Attention();
+
     Track();
 
     return mCurrentFrame.mTcw.clone();
@@ -259,6 +266,9 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
     else
         mCurrentFrame = Frame(mImGray,timestamp,mpORBextractorLeft,mpORBVocabulary,mK,mDistCoef,mbf,mThDepth);
 
+    // Zhenghe part
+    attention = Attention();
+
     Track();
 
     return mCurrentFrame.mTcw.clone();
@@ -266,6 +276,14 @@ cv::Mat Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp)
 
 void Tracking::Track()
 {
+    // Zhenghe Part: get the initial optimized pose
+    clock_t start_tracking = clock();
+    cv::Mat Pose00 = cv::Mat::zeros(4,4,CV_32F);
+    cv::Mat Pose01 = cv::Mat::zeros(4,4,CV_32F);
+
+
+
+
     if(mState==NO_IMAGES_YET)
     {
         mState = NOT_INITIALIZED;
@@ -310,7 +328,34 @@ void Tracking::Track()
                 }
                 else
                 {
+
+
+
+
+
+                    // for debugging
+                    clock_t start_time = clock();
+
                     bOK = TrackWithMotionModel();
+
+                    // Zhenghe part
+                    Pose00 = mVelocity*mLastFrame.mTcw;
+                    
+
+                    // for debugging
+                    clock_t stop_time = clock();
+                    double motion_time = ((double)(stop_time-start_time))/CLOCKS_PER_SEC;
+                    // for debugging: write this vector into a .txt file
+                    std::ofstream TrackMotion_time;
+                    TrackMotion_time.open("TrackMotion_time.txt", std::fstream::app);
+                    TrackMotion_time << std::fixed << motion_time << endl;
+                    TrackMotion_time.close();
+
+
+
+
+
+
                     if(!bOK)
                         bOK = TrackReferenceKeyFrame();
                 }
@@ -337,6 +382,8 @@ void Tracking::Track()
                     if(!mVelocity.empty())
                     {
                         bOK = TrackWithMotionModel();
+                        // Zhenghe part
+                        Pose00 = mVelocity*mLastFrame.mTcw;
                     }
                     else
                     {
@@ -359,6 +406,10 @@ void Tracking::Track()
                     if(!mVelocity.empty())
                     {
                         bOKMM = TrackWithMotionModel();
+
+                        // Zhenghe part
+                        Pose00 = mVelocity*mLastFrame.mTcw;
+
                         vpMPsMM = mCurrentFrame.mvpMapPoints;
                         vbOutMM = mCurrentFrame.mvbOutlier;
                         TcwMM = mCurrentFrame.mTcw.clone();
@@ -394,6 +445,40 @@ void Tracking::Track()
 
         mCurrentFrame.mpReferenceKF = mpReferenceKF;
 
+
+
+
+
+
+        // Zhenghe Part: get the initial optimized pose
+        if (!((Pose00.at<float>(0,0)==0)&&(Pose00.at<float>(1,0)==0)&&(Pose00.at<float>(2,0)==0)))
+        {        
+            Pose01 = (mCurrentFrame.mTcw).clone();
+            cv::Mat delta_pose01 = Pose01 - Pose00;
+            cv::Mat Trans01 = delta_pose01(cv::Rect(3,0,1,3));
+            float Rot1_00 = acos((Pose00.at<float>(0,0)+Pose00.at<float>(1,1)+Pose00.at<float>(2,2)-1.0)/2.0);
+            float Rot1_01 = acos((Pose01.at<float>(0,0)+Pose01.at<float>(1,1)+Pose01.at<float>(2,2)-1.0)/2.0);
+            float delta_trans01 = cv::norm(Trans01);
+            float delta_rot01 = Rot1_01 - Rot1_00;
+
+            std::ofstream Pose_Trans01;
+            Pose_Trans01.open("Pose_Trans01.txt", std::fstream::app);
+            Pose_Trans01 << delta_trans01 << endl;
+            Pose_Trans01.close();
+
+            std::ofstream Pose_Rot01;
+            Pose_Rot01.open("Pose_Rot01.txt", std::fstream::app);
+            Pose_Rot01 << delta_rot01 << endl;
+            Pose_Rot01.close();
+        }
+
+
+
+
+
+
+
+
         // If we have an initial estimation of the camera pose and matching. Track the local map.
         if(!mbOnlyTracking)
         {
@@ -408,6 +493,39 @@ void Tracking::Track()
             if(bOK && !mbVO)
                 bOK = TrackLocalMap();
         }
+
+
+
+
+
+
+
+        // Zhenghe Part: get the refined optimized pose
+        if (!((Pose00.at<float>(0,0)==0)&&(Pose00.at<float>(1,0)==0)&&(Pose00.at<float>(2,0)==0)))
+        { 
+            cv::Mat Pose02 = (mCurrentFrame.mTcw).clone();
+            cv::Mat delta_pose02 = Pose02 - Pose01;
+            cv::Mat Trans02 = delta_pose02(cv::Rect(3,0,1,3));
+            float Rot2_00 = acos((Pose01.at<float>(0,0)+Pose01.at<float>(1,1)+Pose01.at<float>(2,2)-1.0)/2.0);
+            float Rot2_01 = acos((Pose02.at<float>(0,0)+Pose02.at<float>(1,1)+Pose02.at<float>(2,2)-1.0)/2.0);
+            float delta_trans02 = cv::norm(Trans02);
+            float delta_rot02 = Rot2_01 - Rot2_00;
+
+            std::ofstream Pose_Trans02;
+            Pose_Trans02.open("Pose_Trans02.txt", std::fstream::app);
+            Pose_Trans02 << delta_trans02 << endl;
+            Pose_Trans02.close();
+
+            std::ofstream Pose_Rot02;
+            Pose_Rot02.open("Pose_Rot02.txt", std::fstream::app);
+            Pose_Rot02 << delta_rot02 << endl;
+            Pose_Rot02.close();
+        }
+
+
+
+
+
 
         if(bOK)
             mState = OK;
@@ -503,6 +621,14 @@ void Tracking::Track()
         mlbLost.push_back(mState==LOST);
     }
 
+    // for debugging
+    clock_t stop_tracking = clock();
+    double track_time = ((double)(stop_tracking-start_tracking))/CLOCKS_PER_SEC;
+    // for debugging: write this vector into a .txt file
+    std::ofstream Track_time;
+    Track_time.open("Track_time.txt", std::fstream::app);
+    Track_time << std::fixed << track_time << endl;
+    Track_time.close();
 }
 
 
@@ -772,7 +898,42 @@ bool Tracking::TrackReferenceKeyFrame()
     mCurrentFrame.mvpMapPoints = vpMapPointMatches;
     mCurrentFrame.SetPose(mLastFrame.mTcw);
 
+
+
+
+
+    // // Zhenghe Part
+    // // Insert my "feature filter" by constraining the total feature number.
+    // // For comparation, there are two ways: 1. Random method; 2. Attention method.
+    // // Both methods will give the same limitation to the feature numbers.
+    // // Select 50% of all the features
+    // if ((mState==LOST)||((mbOnlyTracking==1)&&(mbVO==1)))
+    // {}
+    // else
+    // {
+    //     mCurrentFrame.select_ind.clear();
+    //     mCurrentFrame.select_ind = attention.AttentionPick(&mCurrentFrame, 0.8);
+    //     // mCurrentFrame.select_ind = attention.RandomPick(&mCurrentFrame, 0.8);
+    // }
+
+    // for debugging
+    cout << "calling TrackRefKeyFrame!" << endl;
+
+
+
+
+    // // Zhenghe Part
+    // std::vector<int> select_tmp = mCurrentFrame.select_ind;
+    // mCurrentFrame.select_ind.clear();
+
+    // Optimize Pose
     Optimizer::PoseOptimization(&mCurrentFrame);
+    mnMatchesInliers = 0;
+
+    // // Zhenghe Part
+    // mCurrentFrame.select_ind = select_tmp;
+
+
 
     // Discard outliers
     int nmatchesMap = 0;
@@ -876,6 +1037,9 @@ bool Tracking::TrackWithMotionModel()
 
     fill(mCurrentFrame.mvpMapPoints.begin(),mCurrentFrame.mvpMapPoints.end(),static_cast<MapPoint*>(NULL));
 
+    // Zhenghe Part
+    mLastFrame.MatchNextFrame = std::vector<int>(mLastFrame.N,-1);
+
     // Project points seen in previous frame
     int th;
     if(mSensor!=System::STEREO)
@@ -888,8 +1052,127 @@ bool Tracking::TrackWithMotionModel()
     if(nmatches<20)
     {
         fill(mCurrentFrame.mvpMapPoints.begin(),mCurrentFrame.mvpMapPoints.end(),static_cast<MapPoint*>(NULL));
+
+        // Zhenghe Part
+        mLastFrame.MatchNextFrame = std::vector<int>(mLastFrame.N,-1);
+
         nmatches = matcher.SearchByProjection(mCurrentFrame,mLastFrame,2*th,mSensor==System::MONOCULAR);
     }
+
+
+
+
+    // Zhenghe Part
+    // Insert my "feature filter" by constraining the total feature number.
+    // For comparation, there are two ways: 1. Random method; 2. Attention method.
+    // Both methods will give the same limitation to the feature numbers.
+    if ((mState==LOST)||((mbOnlyTracking==1)&&(mbVO==1)))
+    {}
+    // if the pose of the robot does not changed too much from the key reference frame's pose, 
+    // keep the previous attention feature set while exclude the outliers.
+    else
+    {
+        // // for debugging: counting the numbers
+        // std::ofstream Select_ind;
+        // Select_ind.open("Select_ind.txt", std::fstream::app);
+        // for (size_t i_index = 0; i_index < mLastFrame.select_ind.size(); i_index++)
+        // {
+        //     Select_ind << std::fixed << mLastFrame.select_ind[i_index] << endl;
+        // }
+        // Select_ind << endl << endl << endl << endl << endl; 
+        // Select_ind.close();
+
+        // std::ofstream matchNextFrame;
+        // matchNextFrame.open("MatchNextFrame.txt", std::fstream::app);
+        // for (int i_index = 0; i_index < mLastFrame.N; i_index++)
+        // {
+        //     matchNextFrame << mLastFrame.MatchNextFrame[i_index] << endl;
+        // }
+        // matchNextFrame << endl << endl << endl << endl << endl;
+        // matchNextFrame.close();
+
+        // int corresp_num = 0;
+        // for (size_t i_index = 0; i_index < mLastFrame.select_ind.size(); i_index++)
+        // {
+        //     size_t correspond = mLastFrame.select_ind[i_index];
+        //     if (mLastFrame.MatchNextFrame[correspond] != -1)
+        //         corresp_num++;
+        // }
+        // std::ofstream Corresp_num;
+        // Corresp_num.open("Corresp_num.txt", std::fstream::app);
+        // Corresp_num << corresp_num << "  nmatches: " << nmatches << endl;
+        // Corresp_num.close();
+
+
+
+
+
+
+        // // Trick: Remain the previous attention features --  
+        // // if both Pose Change Condition and Feature Inheritance Condition are satisfied
+
+        // std::vector<int> index_tmp;
+
+        // // first condition: check whether lastframe's attention selection set still remains most part of the original attention set
+        // if ((int)(mLastFrame.select_ind.size()) > (int)(attention_orig * 0.8))
+        // {
+        //     // second condition: check if last pose's mvelocity is only changed for a little bit
+        //     float delta_theta = std::abs(acos((mVelocity.at<float>(0,0) + mVelocity.at<float>(1,1) + mVelocity.at<float>(2,2) - 1.0f) / 2.0f));
+        //     float delta_translation = std::sqrt(mVelocity.at<float>(0,3)*mVelocity.at<float>(0,3) + mVelocity.at<float>(1,3)*mVelocity.at<float>(1,3) + mVelocity.at<float>(2,3)*mVelocity.at<float>(2,3));
+            
+        //     if ((delta_theta < 0.05) && (delta_translation < 0.05))
+        //     {
+        //         // Project previous attention features' mappoints onto current frame, check FoV for each feature
+        //         int chosen_one;
+        //         for (int i_att = 0; i_att < (int)(mLastFrame.select_ind.size()); i_att++)
+        //         {
+        //             chosen_one = mLastFrame.select_ind[i_att];
+        //             if (mLastFrame.MatchNextFrame[chosen_one] != -1)
+        //             {
+        //                 index_tmp.push_back(mLastFrame.MatchNextFrame[chosen_one]);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // // third condition: check if # of attention features from last frame remains for more than 80%
+        // if ((int)(index_tmp.size()) > (int)(mLastFrame.select_ind.size()*0.8))
+        // {
+        //     mCurrentFrame.select_ind.clear();
+        //     mCurrentFrame.select_ind = index_tmp;
+        // }
+        // // if the inherited features are not sufficiently many, recalculate new attention features for mCurrentFrame
+        // else
+        // {
+            mCurrentFrame.select_ind.clear();
+
+            // for debugging
+            clock_t att_start_time = clock();
+
+            // This single sentence will decide to use Att or Random features in Tracking
+            
+            mCurrentFrame.select_ind = attention.AttentionPick(&mCurrentFrame, 0.2);
+            // mCurrentFrame.select_ind = attention.RandomPick(&mCurrentFrame, 0.2);
+
+            // denote the size of the original vector select_ind, it will be used as a recycle condition
+            attention_orig = mCurrentFrame.select_ind.size();
+
+            // for debugging
+            clock_t att_stop_time = clock();
+            double att_time = ((double)(att_stop_time-att_start_time))/CLOCKS_PER_SEC;
+            // for debugging: write this vector into a .txt file
+            std::ofstream Att_time;
+            Att_time.open("Att_time.txt", std::fstream::app);
+            Att_time << std::fixed << att_time << endl;
+            Att_time.close();
+        // }
+    }
+
+
+
+
+
+
 
     if(nmatches<20)
         return false;
@@ -916,7 +1199,7 @@ bool Tracking::TrackWithMotionModel()
             else if(mCurrentFrame.mvpMapPoints[i]->Observations()>0)
                 nmatchesMap++;
         }
-    }    
+    }
 
     if(mbOnlyTracking)
     {
@@ -936,9 +1219,16 @@ bool Tracking::TrackLocalMap()
 
     SearchLocalPoints();
 
+    // // Zhenghe Part
+    // std::vector<int> select_tmp = mCurrentFrame.select_ind;
+    // mCurrentFrame.select_ind.clear();
+
     // Optimize Pose
     Optimizer::PoseOptimization(&mCurrentFrame);
     mnMatchesInliers = 0;
+
+    // // Zhenghe Part
+    // mCurrentFrame.select_ind = select_tmp;
 
     // Update MapPoints Statistics
     for(int i=0; i<mCurrentFrame.N; i++)
@@ -1138,6 +1428,13 @@ void Tracking::CreateNewKeyFrame()
 
     mnLastKeyFrameId = mCurrentFrame.mnId;
     mpLastKeyFrame = pKF;
+
+    // Zhenghe Part
+    std::ofstream newkeyframe;
+    newkeyframe.open("KeyFrame.txt", std::fstream::app);
+    newkeyframe << "1" << endl;
+    newkeyframe.close();
+
 }
 
 void Tracking::SearchLocalPoints()
@@ -1586,7 +1883,6 @@ void Tracking::InformOnlyTracking(const bool &flag)
 {
     mbOnlyTracking = flag;
 }
-
 
 
 } //namespace ORB_SLAM
