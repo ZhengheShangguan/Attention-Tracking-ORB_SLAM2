@@ -1,4 +1,4 @@
-# Active-ORB-SLAM2
+# Attention-Tracking_ORB-SLAM2
 **Authors: ORB SLAM 2** [Raul Mur-Artal](http://webdiis.unizar.es/~raulmur/), [Juan D. Tardos](http://webdiis.unizar.es/~jdtardos/), [J. M. M. Montiel](http://webdiis.unizar.es/~josemari/) and [Dorian Galvez-Lopez](http://doriangalvez.com/) ([DBoW2](https://github.com/dorian3d/DBoW2))
 
 **Authors: [Attention and Anticipation in Fast Visual-Inertial Navigation]** [Luca Carlone and Sertac Karaman](https://arxiv.org/pdf/1610.03344.pdf)
