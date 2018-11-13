@@ -7,7 +7,7 @@
 
 
 # 1. Main Contribution
-- Adapted Attention Method from VIO Tracking thread to Visual Odometry Tracking threads
+- Adapted Attention Method from VIO Tracking thread to Visual SLAM Tracking threads
 - Derived the method with Lie Algebra, Implemented the new method on ORB-SLAM2
 
 
@@ -37,11 +37,11 @@ ROS indigo is required [ros](http://wiki.ros.org/indigo/Installation/Ubuntu).
 
 Clone the repository:
 ```
-git clone hhttps://github.com/ZhengheShangguan/Attention-Tracking-Visual_Odometry.git
+git clone https://github.com/ZhengheShangguan/Attention-Tracking_ORB-SLAM2.git
 ```
 
 ```
-cd Attention-Tracking-Visual_Odometry
+cd Attention-Tracking_ORB-SLAM2
 chmod +x build.sh
 ./build.sh
 ```
