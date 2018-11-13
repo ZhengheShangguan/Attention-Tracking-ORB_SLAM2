@@ -7,6 +7,7 @@
 
 
 # 1. Main Contribution
+- The authors of the above "Attention" paper have not opened their source codes yet, and this work serves as a reproduction and extension of their paper.
 - Adapted Attention Method from VIO Tracking thread to Visual SLAM Tracking threads
 - Derived the method with Lie Algebra, Implemented the new method on ORB-SLAM2
 
