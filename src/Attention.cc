@@ -57,10 +57,6 @@ Attention::Attention()
 // Attention Feature Selection function
 std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
 {
-    // // for debugging
-    // clock_t select_start_time = clock();
-
-
     // constant numbers: constrained match number & keypoint number
     int constr_matches = 0;
     int match_num = 0;
@@ -91,10 +87,6 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
     float f_tmp;
     cv::Mat delta_tmp(6,6,CV_32F);
 
-    // // for debugging
-    // clock_t select_stop_time01 = clock();
-
-
     // For-loop One: Compute information contribution for each matched feature
 
     // first, get the number of valid matches
@@ -105,9 +97,6 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
             match_num++;
         }
     }
-
-    // // for debugging
-    // clock_t select_stop_time02 = clock();
 
     // get inverse of calibration matrix mK
     cv::invert(mCurrentFrame->mK, mK_inv, 2);
@@ -164,24 +153,12 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
         }
     }
 
-    // // for debugging
-    // clock_t select_stop_time03 = clock();
-
-
     // For-loop Two: Compute upperbounds for each possible added feature & Find out the best feature with Greedy algorithm
 
     // Choose max of both as our constr_matches
     constr_matches = 20;//std::max((int)(ratio*match_num), std::min(60, match_num));
     // Make the final selected number to be a multiples of 5
     constr_matches = 5 * ((int)(constr_matches/5));
-
-
-    // // for debugging
-    // clock_t select_stop_time04 = clock();
-
-
-
-
 
     // Greedy algorithm with lazy evaluation: get the best ranked features
     std::vector<float> ctrb_curr(match_num);
@@ -220,46 +197,8 @@ std::vector<int> Attention::AttentionPick(Frame* mCurrentFrame, float ratio)
         }
     }
 
-    // // for debugging
-    // clock_t select_stop_time05 = clock();
-
-
     // sort the vector before return
     std::sort(Index_best.begin(), Index_best.end());
-
-
-    // // for debugging
-    // clock_t select_stop_time06 = clock();
-
-
-    // // for debugging: write these vectors into several .txt files
-    // double time01 = ((double)(select_stop_time01 - select_start_time))/CLOCKS_PER_SEC;
-    // double time02 = ((double)(select_stop_time02 - select_start_time))/CLOCKS_PER_SEC;
-    // double time03 = ((double)(select_stop_time03 - select_start_time))/CLOCKS_PER_SEC;
-    // double time04 = ((double)(select_stop_time04 - select_start_time))/CLOCKS_PER_SEC;
-    // double time05 = ((double)(select_stop_time05 - select_start_time))/CLOCKS_PER_SEC;
-    // double time06 = ((double)(select_stop_time06 - select_start_time))/CLOCKS_PER_SEC;
-    // std::ofstream Select_data;
-    // Select_data.open("Select_data01.txt", std::fstream::app);
-    // Select_data << std::fixed << time01 << endl;
-    // Select_data.close();
-    // Select_data.open("Select_data02.txt", std::fstream::app);
-    // Select_data << std::fixed << time02 << endl;
-    // Select_data.close();
-    // Select_data.open("Select_data03.txt", std::fstream::app);
-    // Select_data << std::fixed << time03 << endl;
-    // Select_data.close();
-    // Select_data.open("Select_data04.txt", std::fstream::app);
-    // Select_data << std::fixed << time04 << endl;
-    // Select_data.close();
-    // Select_data.open("Select_data05.txt", std::fstream::app);
-    // Select_data << std::fixed << time05 << endl;
-    // Select_data.close();
-    // Select_data.open("Select_data06.txt", std::fstream::app);
-    // Select_data << std::fixed << time06 << endl;
-    // Select_data.close();
-
-
 
     // set the flag for those best MapPoints 
     // (also we need to change OptimizaPose function)
